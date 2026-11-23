@@ -1,0 +1,12 @@
+/* Maps lessons 01–02 onto the journal palette (same tokens as kb.css). Higher specificity beats their own :root rules. */
+:root:root:root{
+  --bg:#000; --surface:#16181A; --ink:#FFF; --muted:#8B9096;
+  --line:#2A2D31; --grid:#1F2124;
+  --up:#2EBD85; --dn:#E15C6F; --bad:#E15C6F;
+  --zone:#CFF14A; --zone-fill:rgba(207,241,74,.12); --zone-edge:rgba(207,241,74,.7);
+  --display:"Inter","IBM Plex Sans Thai",system-ui,sans-serif;
+  --body:"Inter","IBM Plex Sans Thai",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+body{padding-inline:16px}

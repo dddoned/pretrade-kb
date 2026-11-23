@@ -1,0 +1,354 @@
+<title>แนวรับแนวต้าน บน BTC จริง</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#EDF0F3; --surface:#F8FAFB; --ink:#17212B; --muted:#5A6672;
+  --line:#CDD5DD; --grid:#DCE2E8;
+  --up:#0E7C6B; --dn:#B4532A; --bad:#C2372F;
+  --zone:#8A6A16; --zone-fill:rgba(173,134,32,.16); --zone-edge:rgba(173,134,32,.75);
+  --display:"Bai Jamjuree","IBM Plex Sans Thai",system-ui,sans-serif;
+  --body:"IBM Plex Sans Thai",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E141A; --surface:#151D25; --ink:#E2E8EE; --muted:#95A2AE;
+    --line:#2B3642; --grid:#1D2731;
+    --up:#3DBFA8; --dn:#E08A5C; --bad:#F06A62;
+    --zone:#D7A93A; --zone-fill:rgba(215,169,58,.15); --zone-edge:rgba(215,169,58,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E141A; --surface:#151D25; --ink:#E2E8EE; --muted:#95A2AE;
+  --line:#2B3642; --grid:#1D2731;
+  --up:#3DBFA8; --dn:#E08A5C; --bad:#F06A62;
+  --zone:#D7A93A; --zone-fill:rgba(215,169,58,.15); --zone-edge:rgba(215,169,58,.7);
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.75;padding-inline:20px;padding-block:40px 80px}
+.wrap{max-width:900px;margin:0 auto;display:grid;gap:60px}
+.prose{max-width:680px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.28;margin:0}
+h1{font-size:clamp(2rem,5vw,2.9rem);font-weight:700;letter-spacing:-.01em}
+h2{font-size:1.55rem;font-weight:600}
+h3{font-size:1.06rem;font-weight:600}
+p{margin:0}
+.stack{display:grid;gap:16px}
+.eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:1.08rem;color:var(--muted);max-width:660px}
+code,.num{font-family:var(--mono);font-size:.9em;font-variant-numeric:tabular-nums}
+b.zone{color:var(--zone)}
+.tag{display:inline-block;font-family:var(--mono);font-size:.72rem;letter-spacing:.04em;padding:1px 8px;border-radius:3px;border:1px solid currentColor;white-space:nowrap}
+.tag.fact{color:var(--up)} .tag.opin{color:var(--muted)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px;display:grid;gap:14px}
+.card figcaption{font-size:.88rem;color:var(--muted);line-height:1.55}
+.scroll{overflow-x:auto}
+.chart{width:100%;height:auto;display:block;min-width:560px}
+.head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.head h3{font-size:1rem}
+.head .meta{font:400 .78rem var(--mono);color:var(--muted)}
+.controls{display:flex;flex-wrap:wrap;gap:8px}
+button{font:500 .85rem var(--mono);color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:4px;padding:4px 11px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+button[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+button:focus-visible{outline:2px solid var(--zone);outline-offset:2px}
+
+.c-up{fill:var(--up);stroke:var(--up)}
+.c-dn{fill:var(--dn);stroke:var(--dn)}
+.c-hit{stroke:var(--zone)!important;fill:var(--zone)!important}
+.gridline{stroke:var(--grid);stroke-width:1}
+.axis{font:11px var(--mono);fill:var(--muted)}
+.zband{fill:var(--zone-fill)}
+.zedge{stroke:var(--zone-edge);stroke-width:1.2;stroke-dasharray:5 4}
+.ztxt{font:500 11px var(--mono);fill:var(--zone)}
+.ann{stroke:var(--ink);stroke-width:1;stroke-dasharray:2 3;opacity:.55}
+.anntxt{font:500 11px var(--mono);fill:var(--ink)}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:720px){.two{grid-template-columns:1fr}.chart{min-width:440px}}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:.9rem;line-height:1.55}
+th,td{text-align:left;vertical-align:top;padding:12px 14px;border-bottom:1px solid var(--line)}
+th{font:500 .75rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-family:var(--display);font-weight:600;white-space:nowrap}
+td.stop{color:var(--bad)}
+ol,ul{margin:0;padding-left:1.3em;display:grid;gap:10px;max-width:680px}
+.warn{border-left:3px solid var(--bad);padding:4px 0 4px 16px;max-width:680px}
+.warn strong{color:var(--bad)}
+.note{border-left:3px solid var(--zone);padding:4px 0 4px 16px;max-width:680px}
+.foot{font-size:.85rem;color:var(--muted);border-top:1px solid var(--line);padding-top:20px;display:grid;gap:6px}
+</style>
+
+<div class="wrap">
+
+<header class="stack">
+  <div class="eyebrow">Pre-trade · Lecture 02 · ตัวอย่างจาก BTCUSDT</div>
+  <h1>แนวรับแนวต้าน บน BTC จริง</h1>
+  <p class="lede">เส้นแนวรับแนวต้านไม่มีพลังวิเศษ มันสำคัญเพราะ<b>มีคำสั่งซื้อขายค้างอยู่ตรงนั้นจริงๆ</b> บทนี้ใช้ราคาจริงของ BTCUSDT ตามรอยโซนเดียวตั้งแต่ตอนเป็นแนวต้าน จนถูกทะลุ และกลายเป็นแนวรับ</p>
+</header>
+
+<section class="stack prose">
+  <div class="eyebrow">กลไก</div>
+  <h2>ใครอยู่อีกฝั่งของราคาตรงนั้น</h2>
+  <p>ราคาหยุดที่ระดับหนึ่งเพราะมีคนตั้งคำสั่งรออยู่ ที่แนวต้านมักมี 3 กลุ่ม:</p>
+  <ul>
+    <li><b>คนที่ติดดอยรอบก่อน</b> ตั้งขายไว้ที่ราคาทุน เพื่อขอแค่เท่าทุน</li>
+    <li><b>คนที่ขายทำกำไร</b> จากที่ซื้อไว้ต่ำกว่านั้น</li>
+    <li><b>คนที่เปิด short</b> เพราะเห็นว่าราคาเคยลงจากตรงนี้มาแล้ว</li>
+  </ul>
+  <p>ทั้งสามกลุ่มรวมกันเป็นกำแพงคำสั่งขาย ตราบใดที่แรงซื้อยังกินคำสั่งพวกนี้ไม่หมด ราคาก็ไม่ผ่าน และนี่คือเหตุผลว่าทำไม<b>โซนถึงอ่อนลงทุกครั้งที่ถูกแตะ</b> เพราะคำสั่งที่ค้างอยู่ถูกกินไปเรื่อยๆ</p>
+  <p class="note">อีกด้านหนึ่งที่ต้องรู้: <b>เหนือแนวต้านคือที่ที่ stop ของฝั่ง short กองอยู่</b> คำสั่ง stop เหล่านั้นคือคำสั่งซื้อที่รอทำงาน ราคาจึงมีแรงจูงใจวิ่งขึ้นไปแตะเพื่อกวาด stop แล้วค่อยกลับลงมา นี่คือที่มาของ "การทะลุหลอก" ซึ่งไม่ใช่เรื่องบังเอิญ</p>
+</section>
+
+<section class="stack">
+  <div class="stack prose">
+    <div class="eyebrow">ตัวอย่างจริง · ทั้งชีวิตของโซนหนึ่ง</div>
+    <h2>โซน 71,500–74,500 ของ BTC <span class="tag fact">ราคาจริง</span></h2>
+    <p>ระหว่าง มี.ค.–ต.ค. 2024 ราคา BTC ชนโซนนี้แล้วลงซ้ำหลายรอบ จนกระทั่งทะลุขึ้นไปเดือน พ.ย. 2024 กดปุ่มดูทีละชั้นได้</p>
+  </div>
+  <figure class="card">
+    <div class="head">
+      <h3>BTCUSDT · Weekly · ม.ค. 2024 – มิ.ย. 2025</h3>
+      <span class="meta">แท่งเทียนจริงจาก Binance</span>
+    </div>
+    <div class="controls" role="group" aria-label="ชั้นข้อมูลของกราฟ">
+      <button data-layer="zone" aria-pressed="true">โซน</button>
+      <button data-layer="hits" aria-pressed="true">แท่งที่แตะโซน</button>
+      <button data-layer="ann" aria-pressed="true">คำอธิบาย</button>
+    </div>
+    <div class="scroll"><svg id="c1" class="chart" viewBox="0 0 900 400" role="img" aria-label="กราฟ BTCUSDT รายสัปดาห์ แสดงโซน 71500 ถึง 74500 ที่เป็นแนวต้านตลอดปี 2024 แล้วถูกทะลุในเดือนพฤศจิกายน 2024"></svg></div>
+    <figcaption>แท่งสีเหลืองคือสัปดาห์ที่ราคาเข้าไปในโซน · ราคาชนโซนนี้ 6 ครั้งในเวลา 8 เดือน ก่อนจะทะลุขึ้นไป</figcaption>
+  </figure>
+  <div class="stack prose">
+    <p>สิ่งที่อ่านได้จากกราฟนี้: <b>โซนไม่ได้พังในครั้งแรก และไม่ได้พังเพราะแตะครบกี่ครั้ง</b> มันพังตอนที่แรงซื้อมากพอจะกินคำสั่งขายที่ค้างอยู่หมด ซึ่งคุณไม่มีทางรู้ล่วงหน้าว่าครั้งไหน</p>
+  </div>
+</section>
+
+<section class="stack">
+  <div class="stack prose">
+    <div class="eyebrow">โซน ไม่ใช่เส้น</div>
+    <h2>วาดยังไงให้ทำซ้ำได้ <span class="tag opin">ข้อเสนอของผม ยังไม่ได้วัดผล</span></h2>
+    <p>ถ้าวาดด้วยสายตา คุณจะขยับเส้นโดยไม่รู้ตัวให้เข้ากับสิ่งที่อยากเห็น ก่อน backtest ต้องมีขั้นตอนตายตัว:</p>
+  </div>
+  <ol>
+    <li><b>เลือก timeframe เดียว</b> แล้วไม่เปลี่ยนอีก เช่น H4 ทั้งการวาดและการเทรด</li>
+    <li><b>หาจุด swing แบบมีกฎ</b> เช่น swing high = แท่งที่ high สูงกว่า 5 แท่งทั้งซ้ายและขวา</li>
+    <li><b>ต้องมีอย่างน้อย 2 จุดที่ใกล้กัน</b> (ห่างกันไม่เกิน ~1% สำหรับคริปโต) ถึงจะวาดโซนได้ จุดเดียวยังไม่ใช่โซน</li>
+    <li><b>ขอบโซน = จากราคาปิดที่สูงที่สุดในกลุ่มนั้น ถึงไส้เทียนที่ยาวที่สุด</b> ไส้เทียนคือที่ที่ราคาไปแล้วไม่มีใครรับ ส่วนราคาปิดคือที่ที่ตลาดยอมรับ</li>
+    <li><b>วาดก่อนที่ราคาจะมาถึงเสมอ</b> ลงวันที่กำกับไว้ด้วย ถ้าวาดตอนราคามาถึงแล้ว คือการหลอกตัวเอง</li>
+  </ol>
+  <p class="prose" style="color:var(--muted);font-size:.95rem">โซนในกราฟด้านบนมาจากกฎนี้: ยอดของสัปดาห์ 11 มี.ค. 2024 (ไส้เทียนถึง <span class="num">73,777</span>) และกลุ่มราคาปิดแถว <span class="num">71,000</span> ของเดือน พ.ค.–มิ.ย. 2024</p>
+</section>
+
+<section class="stack">
+  <div class="stack prose">
+    <div class="eyebrow">การทะลุ</div>
+    <h2>"ทะลุ" ต้องนิยามก่อน ไม่งั้นเถียงกับตัวเองได้ทุกวัน</h2>
+    <p>ซูมเข้าไปดูรายวันช่วงปลายปี 2024 จะเห็นสองเหตุการณ์ที่หน้าตาคล้ายกันตอนมันเกิด แต่จบไม่เหมือนกัน</p>
+  </div>
+  <figure class="card">
+    <div class="head">
+      <h3>BTCUSDT · Daily · 18 ต.ค. – 14 พ.ย. 2024</h3>
+      <span class="meta">เส้นประ = 73,777</span>
+    </div>
+    <div class="scroll"><svg id="c2" class="chart" viewBox="0 0 900 360" role="img" aria-label="กราฟรายวัน แสดงวันที่ 29 ตุลาคม 2024 ที่ราคาขึ้นไปใกล้ 73777 แล้วถูกตีกลับ และวันที่ 6 พฤศจิกายน 2024 ที่ปิดเหนือระดับนั้น"></svg></div>
+    <figcaption><b>29 ต.ค.</b> ราคาขึ้นไปสูงสุด 73,620 ห่างจากขอบโซนไม่ถึง 0.3% แล้วปิดที่ 72,736 ก่อนจะร่วงลงไป 66,835 ในอีก 6 วัน (−9%) · <b>6 พ.ย.</b> ปิดที่ 75,572 เหนือโซน แล้วไม่กลับลงมาอีกเลย</figcaption>
+  </figure>
+  <div class="stack prose">
+    <p>ตอนอยู่ในวันที่ 29 ต.ค. คุณไม่รู้ว่าอันไหนคืออันไหน สิ่งเดียวที่ทำได้คือ<b>เขียนนิยามไว้ล่วงหน้า</b> แล้วยอมรับผลของนิยามนั้น ตัวอย่างนิยามที่ใช้ได้:</p>
+    <ul>
+      <li><b>ปิดเหนือขอบโซน</b> อย่างน้อย 1 แท่ง (ง่ายที่สุด และเป็นตัวที่ผมแนะนำให้เริ่ม)</li>
+      <li><b>ปิดเหนือขอบโซนเกิน x%</b> หรือเกิน 0.5 ATR เพื่อกันการทะลุแบบเฉียดฉิว</li>
+      <li><b>ปิดเหนือ 2 แท่งติด</b> ลดการทะลุหลอก แต่เข้าช้าลงและ stop กว้างขึ้น</li>
+    </ul>
+    <p class="warn"><strong>ห้ามเปลี่ยนนิยามกลางทาง</strong> ถ้าเทรดแรกโดนทะลุหลอกแล้วคุณเปลี่ยนเป็น "ปิด 2 แท่ง" ผลทดสอบทั้งหมดก่อนหน้านั้นใช้ไม่ได้ทันที ต้องเริ่มนับใหม่</p>
+  </div>
+</section>
+
+<section class="stack">
+  <div class="stack prose">
+    <div class="eyebrow">การกลับด้าน</div>
+    <h2>แนวต้านเก่ากลายเป็นแนวรับใหม่ (แต่ไม่ตรงเป๊ะ)</h2>
+    <p>คนที่พลาดรอบก่อนตั้งรอซื้อไว้ที่ราคาที่เคยเป็นแนวต้าน นี่คือเหตุผลของการกลับด้าน ห้าเดือนหลังทะลุ ราคา BTC ลงมาทดสอบบริเวณนั้นจริง</p>
+  </div>
+  <figure class="card">
+    <div class="head">
+      <h3>BTCUSDT · Daily · 20 มี.ค. – 25 เม.ย. 2025</h3>
+      <span class="meta">โซนเดิม 71,500–74,500</span>
+    </div>
+    <div class="scroll"><svg id="c3" class="chart" viewBox="0 0 900 340" role="img" aria-label="กราฟรายวันเดือนเมษายน 2025 ราคาลงมาต่ำสุด 74508 เหนือขอบโซนเดิมเล็กน้อย แล้วเด้งขึ้น"></svg></div>
+    <figcaption>จุดต่ำสุดวันที่ 7 เม.ย. 2025 คือ <span class="num">74,508</span> ห่างจากยอดเดิม <span class="num">73,777</span> อยู่ <span class="num">+1.0%</span> แล้วเด้งขึ้นต่อเนื่องไปถึง 126,200 ในเดือน ต.ค. 2025</figcaption>
+  </figure>
+  <div class="stack prose">
+    <p class="warn"><strong>นี่คือบทเรียนที่สำคัญที่สุดของบทนี้:</strong> ราคา<b>ไม่เคยลงมาในโซนเลย</b> มันหยุดเหนือขอบโซน 1% ถ้ากฎของคุณเขียนว่า "เข้าซื้อเมื่อราคาแตะในโซน" คุณจะไม่ได้เทรดนี้เลย ทั้งที่การกลับด้านเกิดขึ้นจริง</p>
+    <p>เลยต้องตัดสินใจล่วงหน้าว่าจะเอาแบบไหน — ทั้งสองแบบมีต้นทุน:</p>
+    <ul>
+      <li><b>รอให้แตะในโซนเท่านั้น</b> ได้ราคาดี แต่พลาดเทรดที่ราคาไม่ลงมาถึง</li>
+      <li><b>ยอมรับ "เข้าใกล้" ในระยะที่กำหนด</b> เช่น ภายใน 1.5% ของขอบโซน ได้เทรดมากขึ้น แต่ stop กว้างขึ้น และโดนหลอกบ่อยขึ้น</li>
+    </ul>
+  </div>
+</section>
+
+<section class="stack">
+  <div class="stack prose">
+    <div class="eyebrow">สองวิธีใช้งาน</div>
+    <h2>เทรดที่โซน หรือ เทรดตอนโซนแตก <span class="tag opin">กรอบคิด ไม่ใช่สัญญาณซื้อขาย</span></h2>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>วิธี</th><th>สมมติฐาน</th><th>ตัวอย่างจุดเข้า</th><th>Stop</th><th>ข้อดี</th><th>จุดตาย</th></tr></thead>
+      <tbody>
+        <tr><td>เด้งจากโซน</td><td>คำสั่งที่ค้างอยู่ยังมากพอ</td><td>ราคาเข้าโซน + แท่งยืนยันการปฏิเสธ (เช่น ไส้ยาวแล้วปิดกลับออกมา)</td><td class="stop">เลยขอบไกลของโซน</td><td>Stop แคบ · RR ดี</td><td>ตายในตลาดเทรนด์แรง ที่ราคาทะลุโซนไปเลย</td></tr>
+        <tr><td>ทะลุแล้วย้อนทดสอบ</td><td>คำสั่งที่ค้างอยู่ถูกกินหมดแล้ว และคนที่พลาดรอเข้า</td><td>ปิดเหนือโซนตามนิยาม แล้วรอราคาย้อนกลับมาที่โซน</td><td class="stop">ใต้โซน (ถ้ากลับเข้าไปในโซน = ทะลุหลอก)</td><td>ตามทางที่ราคาไปแล้ว</td><td>ราคาบางครั้งไม่ย้อนกลับมาเลย เหมือนตัวอย่าง เม.ย. 2025</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="stack">
+  <div class="stack prose">
+    <div class="eyebrow">ก่อน backtest</div>
+    <h2>6 อย่างที่ต้องล็อกให้ชัด</h2>
+  </div>
+  <ol>
+    <li><b>นิยาม swing</b> ที่ใช้หาโซน (จำนวนแท่งซ้าย/ขวา)</li>
+    <li><b>ความกว้างของโซน</b> และกฎว่าอะไรนับเป็น "แตะ" (แตะในโซน หรือเข้าใกล้กี่ %)</li>
+    <li><b>นิยามการทะลุ</b> (ปิดกี่แท่ง เลยขอบเท่าไหร่)</li>
+    <li><b>เลือกวิธีเดียว</b> ระหว่างเด้งจากโซน กับ ทะลุแล้วย้อนทดสอบ อย่าทดสอบพร้อมกัน</li>
+    <li><b>ตลาดเดียว + timeframe เดียว</b> ผลของ BTC ใช้กับ XAUUSD ไม่ได้</li>
+    <li><b>วาดโซนก่อนที่ราคาจะมาถึง</b> และเซฟภาพหรือจดราคาไว้ก่อนเสมอ</li>
+  </ol>
+  <div class="stack prose">
+    <p><b>ข้อแตกต่างระหว่างตลาด</b></p>
+    <ul style="color:var(--muted);font-size:.95rem">
+      <li><b>คริปโต</b> 24/7 ไม่มี gap · เลขกลมที่คนมองคือหลักพัน (70,000 · 100,000) · ช่วงเสาร์-อาทิตย์สภาพคล่องบางลง ทำให้ทะลุหลอกง่ายขึ้น</li>
+      <li><b>XAUUSD</b> มี gap เปิดตลาดวันจันทร์ ที่อาจกระโดดข้ามโซนไปเลยโดยไม่มีการทดสอบ · เลขกลมคือทุก 10 และ 50 ดอลลาร์ · ข่าว NFP และ CPI ทำให้โซนถูกทะลุแบบไม่สนคำสั่งที่ค้างอยู่</li>
+    </ul>
+  </div>
+</section>
+
+<section class="stack prose">
+  <div class="eyebrow">ข้อความที่พิสูจน์ผิดได้</div>
+  <h2>สิ่งที่คุณจะทดสอบจริงๆ</h2>
+  <p>"บน BTCUSDT timeframe H4 การเข้าซื้อเมื่อราคาแตะโซนแนวรับที่วาดไว้ล่วงหน้า โดยวาง stop ใต้ขอบโซน และออกที่ 2R ให้ expectancy เป็นบวกเมื่อครบ 30 เทรด"</p>
+  <p style="color:var(--muted)">ประโยคนี้ผิดได้ ซึ่งเป็นสิ่งที่ประโยคอย่าง "แนวรับแนวต้านใช้ได้ผล" ทำไม่ได้ · ขั้นต่อไปถ้าพร้อม คือเขียน spec แล้วเริ่ม log ลง <code>practice/log.csv</code></p>
+</section>
+
+<footer class="foot">
+  <div><b>ข้อมูล</b></div>
+  <div>แท่งเทียนทั้งหมดเป็นราคาปิดจริงของ BTCUSDT จาก Binance ดึงเมื่อ 17 ก.ย. 2026 · เก็บไว้ที่ <code>data/BTCUSDT_1w.csv</code> และ <code>data/BTCUSDT_1d.csv</code></div>
+  <div>โซน 71,500–74,500 และคำอธิบายทั้งหมดเป็นการวาดย้อนหลังเพื่อการสอน ไม่ใช่ผลทดสอบ</div>
+</footer>
+
+</div>
+
+<script src="sr-data.js"></script>
+<script>
+(function(){
+  var NS="http://www.w3.org/2000/svg";
+  var TH=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+  function el(n,a,txt){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;return e}
+  function fmt(v){return Math.round(v).toLocaleString("en-US")}
+
+  function draw(id,data,opt){
+    var svg=document.getElementById(id);
+    var vb=svg.getAttribute("viewBox").split(" "),W=+vb[2],H=+vb[3];
+    var pl=58,pr=16,pt=16,pb=28;
+    var lo=Infinity,hi=-Infinity;
+    data.forEach(function(d){lo=Math.min(lo,d[3]);hi=Math.max(hi,d[2])});
+    if(opt.zone){lo=Math.min(lo,opt.zone[0]);hi=Math.max(hi,opt.zone[1])}
+    var pad=(hi-lo)*0.08;lo-=pad;hi+=pad;
+    var n=data.length,cw=(W-pl-pr)/n;
+    function x(i){return pl+(i+0.5)*cw}
+    function y(p){return pt+(hi-p)/(hi-lo)*(H-pt-pb)}
+
+    var gGrid=el("g",{}),gZone=el("g",{"data-layer":"zone"}),gC=el("g",{}),gAnn=el("g",{"data-layer":"ann"});
+    for(var t=0;t<=4;t++){
+      var pv=lo+(hi-lo)*t/4,yy=y(pv);
+      gGrid.appendChild(el("line",{"class":"gridline",x1:pl,x2:W-pr,y1:yy,y2:yy}));
+      gGrid.appendChild(el("text",{"class":"axis",x:pl-8,y:yy+4,"text-anchor":"end"},fmt(pv)));
+    }
+    var lastMonth=null;
+    data.forEach(function(d,i){
+      var p=d[0].split("-"),mo=p[1];
+      var show=(opt.dateEvery)?(i%opt.dateEvery===0):(mo!==lastMonth);
+      if(show&&x(i)<W-pr-26){
+        lastMonth=mo;
+        var lab=opt.dateEvery?(+p[2]+" "+TH[+mo-1]):(TH[+mo-1]+(mo==="01"?" "+p[0].slice(2):""));
+        gGrid.appendChild(el("text",{"class":"axis",x:x(i),y:H-9,"text-anchor":"middle"},lab));
+      }
+    });
+
+    if(opt.zone){
+      var z0=y(opt.zone[1]),z1=y(opt.zone[0]);
+      gZone.appendChild(el("rect",{"class":"zband",x:pl,y:z0,width:W-pl-pr,height:z1-z0}));
+      gZone.appendChild(el("line",{"class":"zedge",x1:pl,x2:W-pr,y1:z0,y2:z0}));
+      gZone.appendChild(el("line",{"class":"zedge",x1:pl,x2:W-pr,y1:z1,y2:z1}));
+      if(opt.zoneLabel)gZone.appendChild(el("text",{"class":"ztxt",x:pl+6,y:z0-6},opt.zoneLabel));
+    }
+    if(opt.level){
+      var ly=y(opt.level);
+      gZone.appendChild(el("line",{"class":"zedge",x1:pl,x2:W-pr,y1:ly,y2:ly}));
+      gZone.appendChild(el("text",{"class":"ztxt",x:pl+6,y:ly-6},fmt(opt.level)));
+    }
+
+    var bw=Math.max(1.6,cw*0.62);
+    data.forEach(function(d,i){
+      var o=d[1],h=d[2],l=d[3],c=d[4];
+      var hit=opt.zone&&opt.hits&&h>=opt.zone[0]&&l<=opt.zone[1];
+      var g=el("g",{"class":"cndl "+(c>=o?"c-up":"c-dn")+(hit?" hit":"")});
+      g.appendChild(el("line",{x1:x(i),x2:x(i),y1:y(h),y2:y(l),"stroke-width":1}));
+      var top=y(Math.max(o,c)),bot=y(Math.min(o,c));
+      g.appendChild(el("rect",{x:x(i)-bw/2,y:top,width:bw,height:Math.max(1.2,bot-top),"stroke-width":0}));
+      gC.appendChild(g);
+    });
+
+    (opt.ann||[]).forEach(function(a){
+      var i=data.findIndex(function(d){return d[0]===a.d});
+      if(i<0)return;
+      var px=x(i),top=y(data[i][2]),bot=y(data[i][3]);
+      var up=a.pos!=="below";
+      var ty=up?Math.max(pt+22,top-16):Math.min(H-pb-6,bot+26);
+      gAnn.appendChild(el("line",{"class":"ann",x1:px,x2:px,y1:up?ty+4:bot+4,y2:up?top-4:ty-14}));
+      var anchor=a.align||"middle",tx=px+(a.dx||0);
+      gAnn.appendChild(el("text",{"class":"anntxt",x:tx,y:ty,"text-anchor":anchor},a.t));
+    });
+
+    svg.appendChild(gGrid);svg.appendChild(gZone);svg.appendChild(gC);svg.appendChild(gAnn);
+  }
+
+  draw("c1",window.SR.W,{
+    zone:[71500,74500],hits:true,zoneLabel:"โซน 71,500–74,500",
+    ann:[
+      {d:"2024-03-11",t:"ยอด 73,777",align:"start",dx:-10},
+      {d:"2024-06-03",t:"ชนซ้ำ",pos:"below"},
+      {d:"2024-11-04",t:"ทะลุ · ปิด 80,370",align:"start",dx:-30},
+      {d:"2025-04-07",t:"ต่ำสุด 74,508",pos:"below",align:"end",dx:26}
+    ]});
+  draw("c2",window.SR.D1,{level:73777,dateEvery:4,
+    ann:[
+      {d:"2024-10-29",t:"สูงสุด 73,620 · ปิด 72,736"},
+      {d:"2024-11-04",t:"ร่วงไป 66,835",pos:"below"},
+      {d:"2024-11-06",t:"ปิด 75,572 เหนือระดับ",align:"end",dx:40}
+    ]});
+  draw("c3",window.SR.D2,{zone:[71500,74500],hits:true,dateEvery:5,zoneLabel:"โซนเดิม",
+    ann:[{d:"2025-04-07",t:"ต่ำสุด 74,508 · ไม่เข้าโซน",pos:"below"}]});
+
+  document.querySelectorAll("[data-layer]").forEach(function(b){
+    if(b.tagName!=="BUTTON")return;
+    b.addEventListener("click",function(){
+      var on=b.getAttribute("aria-pressed")!=="true";
+      b.setAttribute("aria-pressed",String(on));
+      var k=b.dataset.layer,c1=document.getElementById("c1");
+      if(k==="hits"){c1.querySelectorAll(".cndl.hit line, .cndl.hit rect").forEach(function(e){e.classList.toggle("c-hit",on)});return}
+      var g=c1.querySelector('g[data-layer="'+k+'"]');
+      if(g)g.setAttribute("visibility",on?"visible":"hidden");
+    });
+  });
+  document.querySelectorAll("#c1 .cndl.hit line, #c1 .cndl.hit rect").forEach(function(e){e.classList.add("c-hit")});
+})();
+</script>
